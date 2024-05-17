@@ -121,10 +121,10 @@ Please find the [features for cifar 100 and cifar 10](https://drive.google.com/d
 
 If you find the code useful for your research, please consider citing
 ```bib
-@article{qin2023cbdm,
-  title={Class-Balancing Diffusion Models},
-  author={Yiming Qin, Huangjie Zheng, Jiangchao Yao, Mingyuan Zhou, Ya Zhang},
-  journal={arXiv preprint arXiv:2305.00562},
+@inproceedings{qin2023class,
+  title={Class-balancing diffusion models},
+  author={Qin, Yiming and Zheng, Huangjie and Yao, Jiangchao and Zhou, Mingyuan and Zhang, Ya},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
   year={2023}
 }
 ```
