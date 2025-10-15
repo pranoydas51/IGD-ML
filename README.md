@@ -90,7 +90,6 @@ CUDA_VISIBLE_DEVICES=0 python main_igd.py --train \
     --tau 0.1 \
     --igd \
     --eta 2e-4 \
-Let me know if you need further adjustments or specific additions!
     --lr 2e-4
 ```
 
@@ -111,7 +110,6 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     --ckpt_step 60000 \
     --num_images 15000 \
     --batch_size 64 \
-Let me know if you need further adjustments or specific additions!
     --notrain \
     --eval \
     --sample_method cfg \
@@ -131,7 +129,6 @@ CUDA_VISIBLE_DEVICES=1 python main_igd.py \
     --batch_size 64 \
     --notrain \
     --eval \
-Let me know if you need further adjustments or specific additions!
     --sample_method cfg \
     --omega 1.6 \
     --prd
@@ -151,7 +148,6 @@ CUDA_VISIBLE_DEVICES=1 python main_igd.py \
     --eval \
     --sample_method cfg \
     --omega 1.6 \
-Let me know if you need further adjustments or specific additions!
     --prd
 ```
 
