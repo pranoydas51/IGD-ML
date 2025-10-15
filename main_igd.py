@@ -13,13 +13,12 @@ from torchvision.datasets import CIFAR10, CIFAR100
 from torchvision.utils import make_grid, save_image
 from torchvision import transforms
 
-from diffusion import GaussianDiffusionTrainer, GaussianDiffusionSampler
-from model.model import UNet
+from diffusion_igd import GaussianDiffusionTrainer, GaussianDiffusionSampler
+from model.model_igd import UNet
 from utils.augmentation import *
-from dataset import ImbalanceCIFAR100, ImbalanceCIFAR10
+from dataset_igd import ImbalanceCIFAR100, ImbalanceCIFAR10
 from score.both import get_inception_and_fid_score
 from utils.augmentation import KarrasAugmentationPipeline
-
 
 FLAGS = flags.FLAGS
 flags.DEFINE_bool('train', False, help='train from scratch')
@@ -63,8 +62,8 @@ flags.DEFINE_integer('sample_size', 64, 'sampling size of images')
 flags.DEFINE_integer('sample_step', 10000, help='frequency of sampling')
 # Evaluation
 flags.DEFINE_integer('save_step', 100000, help='frequency of saving checkpoints, 0 to disable during training')
-flags.DEFINE_integer('eval_step', 0, help='frequency of evaluating model, 0 to disable during training')
-flags.DEFINE_integer('num_images', 50000, help='the number of generated images for evaluation')
+flags.DEFINE_integer('eval_step', 1000, help='frequency of evaluating model, 0 to disable during training') #MOD
+flags.DEFINE_integer('num_images', 500, help='the number of generated images for evaluation')
 flags.DEFINE_integer('private_num_images', 0, help='the number of private images for evaluation')
 flags.DEFINE_bool('fid_use_torch', False, help='calculate IS and FID on gpu')
 flags.DEFINE_string('fid_cache', './stats/cifar10.train.npz', help='FID cache')
@@ -73,7 +72,7 @@ flags.DEFINE_bool('sampled', False, help='evaluate sampled images')
 flags.DEFINE_string('sample_method', 'cfg', help='sampling method, must be in [cfg, cond, uncond]')
 flags.DEFINE_float('omega', 0.0, help='guidance strength for cfg sampling method')
 flags.DEFINE_bool('prd', True, help='evaluate precision and recall (F_beta), only evaluated with 50k samples')
-flags.DEFINE_bool('improved_prd', True, help='evaluate improved precision and recall, only evaluated with 50k samples')
+flags.DEFINE_bool('improved_prd', False, help='evaluate improved precision and recall, only evaluated with 50k samples')
 # CBDM hyperparameters
 flags.DEFINE_bool('cb', False, help='train with class-balancing(adjustment) loss')
 flags.DEFINE_float('tau', 1.0, help='weight for the class-balancing(adjustment) loss')
@@ -82,13 +81,14 @@ flags.DEFINE_bool('finetune', False, help='finetuned based on a pretrained model
 flags.DEFINE_string('finetuned_logdir', '', help='logdir for the new model, where FLAGS.logdir will be the folder for \
                      the pretrained model')
 flags.DEFINE_integer('ckpt_step', 0, help='step to reload the pretained checkpoint')
+# IGD hyperparameters
+flags.DEFINE_bool('igd', False, help='train with Individual Gradient Descent')
+flags.DEFINE_float('eta', 1e-4, help='learning rate for IGD')
 
 device = torch.device('cuda:0')
 
-
 def uniform_sampling(n, N, k):
     return np.stack([np.random.randint(int(N/n)*i, int(N/n)*(i+1), k) for i in range(n)])
-
 
 def ema(source, target, decay):
     source_dict = source.state_dict()
@@ -98,16 +98,13 @@ def ema(source, target, decay):
             target_dict[key].data * decay +
             source_dict[key].data * (1 - decay))
 
-
 def infiniteloop(dataloader):
     while True:
         for x, y in iter(dataloader):
             yield x, y
 
-
 def warmup_lr(step):
     return min(step, FLAGS.warmup) / FLAGS.warmup
-
 
 def evaluate(sampler, model, sampled):
     if not sampled:
@@ -123,7 +120,7 @@ def evaluate(sampler, model, sampled):
                                                      omega=FLAGS.omega,
                                                      method=FLAGS.sample_method)
                 images.append((batch_images.cpu() + 1) / 2)
-                if FLAGS.sample_method!='uncond' and batch_labels is not None:
+                if FLAGS.sample_method != 'uncond' and batch_labels is not None:
                     labels.append(batch_labels.cpu())
             images = torch.cat(images, dim=0).numpy()
         np.save(os.path.join(FLAGS.logdir, '{}_{}_samples_ema_{}.npy'.format(
@@ -157,7 +154,6 @@ def evaluate(sampler, model, sampled):
 
     return (IS, IS_std), FID, prd_score, ipr
 
-
 def train():
     if FLAGS.augm:
         tran_transform=transforms.Compose([
@@ -174,7 +170,6 @@ def train():
             transforms.Resize([FLAGS.img_size, FLAGS.img_size])
         ])
 
-
     if FLAGS.data_type == 'cifar10':
         dataset = CIFAR10(
                 root=FLAGS.root,
@@ -184,14 +179,12 @@ def train():
     elif FLAGS.data_type == 'cifar100':
         dataset = CIFAR100(
                 root=FLAGS.root,
-                # root='...',
                 train=True,
                 download=True,
                 transform=tran_transform)
     elif FLAGS.data_type == 'cifar10lt':
         dataset = ImbalanceCIFAR10(
                 root=FLAGS.root,
-                # root='...',
                 imb_type='exp',
                 imb_factor=FLAGS.imb_factor,
                 rand_number=0,
@@ -202,7 +195,6 @@ def train():
     elif FLAGS.data_type == 'cifar100lt':
         dataset = ImbalanceCIFAR100(
                 root=FLAGS.root,
-                # root='...',
                 imb_type='exp',
                 imb_factor=FLAGS.imb_factor,
                 rand_number=0,
@@ -239,7 +231,7 @@ def train():
     ema_model = copy.deepcopy(net_model)
 
     # training setup
-    optim = torch.optim.Adam(net_model.parameters(), lr=FLAGS.lr)
+    optim = torch.optim.Adam(net_model.parameters(), lr=FLAGS.eta if FLAGS.igd else FLAGS.lr)
     sched = torch.optim.lr_scheduler.LambdaLR(optim, lr_lambda=warmup_lr)
     trainer = GaussianDiffusionTrainer(
         net_model, FLAGS.beta_1, FLAGS.beta_T, FLAGS.T, dataset,
@@ -278,36 +270,64 @@ def train():
     # start training
     with trange(FLAGS.ckpt_step, FLAGS.total_steps, dynamic_ncols=True) as pbar:
         for step in pbar:
-            # train
-            optim.zero_grad()
-            x_0, y_0 = next(datalooper)
-
-            # when using ADA, the augmentation parameters will also be returned by the dataloader
-            augm = None
-            if type(x_0) == list:
-                x_0, augm = x_0
-                augm = augm.to(device)
-
-            x_0 = x_0.to(device)
-            y_0 = y_0.to(device)
-
-            loss_ddpm, loss_reg = trainer(x_0, y_0, augm)
-            loss_ddpm = loss_ddpm.mean()
-            loss_reg = loss_reg.mean()
-            loss = loss_ddpm + loss_reg if FLAGS.cb and loss_reg > 0 else loss_ddpm
-            loss.backward()
-
-            torch.nn.utils.clip_grad_norm_(
-                net_model.parameters(), FLAGS.grad_clip)
-            optim.step()
-            sched.step()
-            ema(net_model, ema_model, FLAGS.ema_decay)
-
-            # logs
-            writer.add_scalar('loss', loss, step)
-            writer.add_scalar('loss_ddpm', loss_ddpm, step)
-            writer.add_scalar('loss_reg', loss_reg, step)
-            pbar.set_postfix(loss='%.5f' % loss)
+            if FLAGS.igd:
+                # IGD: Sequential per-class updates
+                per_class_loaders = []
+                for y in range(FLAGS.num_class):
+                    indices = [i for i, label in enumerate(dataset.targets) if label == y]
+                    subset = torch.utils.data.Subset(dataset, indices)
+                    batch_size_y = max(1, FLAGS.batch_size // FLAGS.num_class)  # Adjust for small classes
+                    loader = torch.utils.data.DataLoader(
+                        subset, batch_size=batch_size_y, shuffle=True,
+                        num_workers=FLAGS.num_workers, drop_last=True)
+                    per_class_loaders.append(infiniteloop(loader))
+                
+                total_loss = 0
+                for y in range(FLAGS.num_class):
+                    optim.zero_grad()
+                    x_0, y_0 = next(per_class_loaders[y])
+                    augm = None
+                    if type(x_0) == list:
+                        x_0, augm = x_0
+                        augm = augm.to(device)
+                    x_0 = x_0.to(device)
+                    y_0 = y_0.to(device)
+                    loss_y = trainer.module.compute_per_class_loss(x_0, y_0, augm)
+                    loss_y.backward()
+                    torch.nn.utils.clip_grad_norm_(net_model.parameters(), FLAGS.grad_clip)
+                    optim.step()
+                    total_loss += loss_y.item()
+                sched.step()
+                ema(net_model, ema_model, FLAGS.ema_decay)
+                # Log average loss
+                loss = total_loss / FLAGS.num_class
+                writer.add_scalar('loss', loss, step)
+                pbar.set_postfix(loss='%.5f' % loss)
+            else:
+                # Original CBDM training
+                optim.zero_grad()
+                x_0, y_0 = next(datalooper)
+                augm = None
+                if type(x_0) == list:
+                    x_0, augm = x_0
+                    augm = augm.to(device)
+                x_0 = x_0.to(device)
+                y_0 = y_0.to(device)
+                loss_ddpm, loss_reg = trainer(x_0, y_0, augm)
+                loss_ddpm = loss_ddpm.mean()
+                loss_reg = loss_reg.mean()
+                loss = loss_ddpm + loss_reg if FLAGS.cb and loss_reg > 0 else loss_ddpm
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(
+                    net_model.parameters(), FLAGS.grad_clip)
+                optim.step()
+                sched.step()
+                ema(net_model, ema_model, FLAGS.ema_decay)
+                # logs
+                writer.add_scalar('loss', loss, step)
+                writer.add_scalar('loss_ddpm', loss_ddpm, step)
+                writer.add_scalar('loss_reg', loss_reg, step)
+                pbar.set_postfix(loss='%.5f' % loss)
 
             # sample
             if step != FLAGS.ckpt_step and step % FLAGS.sample_step == 0:
@@ -335,7 +355,6 @@ def train():
 
             # evaluate
             if FLAGS.eval_step > 0 and step % FLAGS.eval_step == 0:
-                # net_IS, net_FID, _ = evaluate(net_sampler, net_model)
                 ema_IS, ema_FID = evaluate(ema_sampler, ema_model, False)
                 metrics = {
                     'IS': ema_IS[0],
@@ -353,7 +372,6 @@ def train():
                     metrics['step'] = step
                     f.write(json.dumps(metrics) + '\n')
     writer.close()
-
 
 def eval():
     FLAGS.num_class = 100 if 'cifar100' in FLAGS.data_type else 10
@@ -396,7 +414,6 @@ def eval():
         f.write("PRD PRECISION FOR 100 CLASSES:%6.5f, RECALL:%7.5f \n" % (prd_score[0], prd_score[1]))
     f.close()
 
-
 def main(argv):
     # suppress annoying inception_v3 initialization warning
     warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -406,7 +423,6 @@ def main(argv):
         eval()
     if not FLAGS.train and not FLAGS.eval:
         print('Add --train and/or --eval to execute corresponding tasks')
-
 
 if __name__ == '__main__':
     app.run(main)

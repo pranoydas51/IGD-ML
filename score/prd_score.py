@@ -42,6 +42,7 @@ from __future__ import print_function
 
 from matplotlib import pyplot as plt
 import numpy as np
+from tqdm import trange
 import sklearn.cluster
 
 
@@ -138,7 +139,7 @@ def _cluster_into_bins(eval_data, ref_data, num_clusters):
 
 def compute_prd_from_embedding(eval_data, ref_data, num_clusters=20,
                                num_angles=1001, num_runs=10,
-                               enforce_balance=True):
+                               enforce_balance=False):
   """Computes PRD data from sample embeddings.
 
   The points from both distributions are mixed and then clustered. This leads
@@ -181,7 +182,7 @@ def compute_prd_from_embedding(eval_data, ref_data, num_clusters=20,
   ref_data = np.array(ref_data, dtype=np.float64)
   precisions = []
   recalls = []
-  for _ in range(num_runs):
+  for _ in trange(num_runs, desc="Computing PRD runs"):
     eval_dist, ref_dist = _cluster_into_bins(eval_data, ref_data, num_clusters)
     precision, recall = compute_prd(eval_dist, ref_dist, num_angles)
     precisions.append(precision)

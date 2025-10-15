@@ -18,7 +18,7 @@
 --img_size=32
 --logdir=./logs/DDPM_CIFAR10_EPS
 --lr=0.0002
---num_images=50000
+--num_images=15000
 --num_res_blocks=2
 --num_workers=4
 --noparallel

@@ -1,0 +1,349 @@
+tau: 0.1 lr: 2e-4
+Model(EMA): IS:8.53390(0.21208), FID/CIFAR100:19.23022 
+PRD PRECISION FOR 100 CLASSES:0.58639, RECALL:0.68579
+
+tensorboard --logdir=/scratch/gilbreth/das211/training_0/logs --reload_multifile=true --reload_interval=1
+tensorboard --logdir=/scratch/gilbreth/das211/training_50k/logs --reload_multifile=true --reload_interval=1
+
+Model(EMA): IS:1.23092(0.02266), FID/CIFAR100:415.81116 
+
+/scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd_lossfixmulti_eval_tau0_1_eval500
+
+$LOGDIR
+
+-----Training 0-----
+CUDA_VISIBLE_DEVICES=0 python main_igd.py --train \
+    --flagfile ./config/cifar10.txt \
+    --parallel \
+    --logdir /scratch/gilbreth/das211/training_0/logs/cifar10lt_igd_lossfixmulti_eval_tau0_1_eval500 \
+    --total_steps 80001 \
+    --conditional \
+    --data_type cifar10lt \
+    --imb_factor 0.01 \
+    --img_size 32 \
+    --batch_size 48 \
+    --save_step 10000 \
+    --sample_step 5000 \
+    --cb \
+    --tau 0.1 \
+    --igd \
+    --eta 2e-4 \
+    --lr 2e-4
+------------------
+
+-----Training 50k-----
+CUDA_VISIBLE_DEVICES=1 python main_igd.py --train \
+    --flagfile ./config/cifar10.txt \
+    --parallel \
+    --logdir /scratch/gilbreth/das211/training_50k/logs/cifar10lt_igd_lossfixmulti_eval_tau0_1_eval500 \
+    --finetuned_logdir /depot/gupta869/data/pranoy/logs/cifar10lt_igd_lossfixmulti_eval_tau0_1_eval500 \
+    --ckpt_step 50000 \
+    --total_steps 80001 \
+    --conditional \
+    --data_type cifar10lt \
+    --imb_factor 0.01 \
+    --img_size 32 \
+    --batch_size 48 \
+    --save_step 10000 \
+    --sample_step 5000 \
+    --cb --tau 0.1 --igd --eta 2e-4 --lr 2e-4
+------------------
+
+
+CUDA_VISIBLE_DEVICES=1 python main_igd.py \
+    --flagfile /scratch/gilbreth/das211/training_0/logs/cifar10lt_igd_lossfixmulti_eval_tau0_1_eval500/flagfile.txt \
+    --logdir /scratch/gilbreth/das211/training_0/logs/cifar10lt_igd_lossfixmulti_eval_tau0_1_eval500 \
+    --fid_cache ./stats/cifar10.train.npz \
+    --ckpt_step 60000 \
+    --num_images 15000 --batch_size 64 \
+    --notrain \
+    --eval \
+    --sample_method cfg  --omega 1.6 --prd
+
+------------------------------------------------------------
+
+tau: 0.0 lr: 2e-4
+Model(EMA): IS:8.62011(0.15132), FID/CIFAR100:19.45985 
+PRD PRECISION FOR 100 CLASSES:0.58472, RECALL:0.67490 
+
+
+
+Model(EMA): IS:1.22568(0.01934), FID/CIFAR100:423.05681 
+
+/scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd_lossfixmulti_tau0_eval_eval500
+
+-----Training 0-----
+CUDA_VISIBLE_DEVICES=0 python main_igd.py --train \
+    --flagfile ./config/cifar10.txt \
+    --parallel \
+    --logdir /scratch/gilbreth/das211/training_0/logs/cifar10lt_igd_lossfixmulti_tau0_eval_eval500 \
+    --total_steps 80001 \
+    --conditional \
+    --data_type cifar10lt \
+    --imb_factor 0.01 \
+    --img_size 32 \
+    --batch_size 48 \
+    --save_step 10000 \
+    --sample_step 5000 \
+    --cb --tau 0.0 --igd --eta 2e-4 --lr 2e-4
+------------------
+
+-----Training 50k-----
+CUDA_VISIBLE_DEVICES=1 python main_igd.py --train \
+    --flagfile ./config/cifar10.txt \
+    --parallel \
+    --logdir /scratch/gilbreth/das211/training_50k/logs/cifar10lt_igd_lossfixmulti_tau0_eval_eval500 \
+    --finetuned_logdir /depot/gupta869/data/pranoy/logs/cifar10lt_igd_lossfixmulti_tau0_eval_eval500 \
+    --ckpt_step 50000 \
+    --total_steps 80001 \
+    --conditional \
+    --data_type cifar10lt \
+    --imb_factor 0.01 \
+    --img_size 32 \
+    --batch_size 48 \
+    --save_step 10000 \
+    --sample_step 5000 \
+    --cb --tau 0.0 --igd --eta 2e-4 --lr 2e-4
+------------------
+
+CUDA_VISIBLE_DEVICES=1 python main_igd.py \
+    --flagfile /scratch/gilbreth/das211/training_0/logs/cifar10lt_igd_lossfixmulti_tau0_eval_eval500/flagfile.txt \
+    --logdir /scratch/gilbreth/das211/training_0/logs/cifar10lt_igd_lossfixmulti_tau0_eval_eval500 \
+    --fid_cache ./stats/cifar10.train.npz \
+    --ckpt_step 60000 \
+    --num_images 15000 --batch_size 64 \
+    --notrain \
+    --eval \
+    --sample_method cfg  --omega 1.6 --prd
+
+------------------------------------------------------------
+
+tau: 1.0 lr: 2e-4
+Model(EMA): IS:8.50151(0.21429), FID/CIFAR100:19.96220 
+PRD PRECISION FOR 100 CLASSES:0.58687, RECALL:0.67755
+
+
+
+
+Model(EMA): IS:1.22373(0.01446), FID/CIFAR100:421.81588
+
+/scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd_lossfixmulti_eval_tau1_eval500
+
+-----Training 0-----
+CUDA_VISIBLE_DEVICES=0 python main_igd.py --train \
+    --flagfile ./config/cifar10.txt \
+    --parallel \
+    --logdir /scratch/gilbreth/das211/training_0/logs/cifar10lt_igd_lossfixmulti_eval_tau1_eval500 \
+    --total_steps 80001 \
+    --conditional \
+    --data_type cifar10lt \
+    --imb_factor 0.01 \
+    --img_size 32 \
+    --batch_size 48 \
+    --save_step 10000 \
+    --sample_step 5000 \
+    --cb --tau 1.0 --igd --eta 2e-4 --lr 2e-4
+------------------
+
+-----Training 50k-----
+CUDA_VISIBLE_DEVICES=1 python main_igd.py --train \
+    --flagfile ./config/cifar10.txt \
+    --parallel \
+    --logdir /scratch/gilbreth/das211/training_50k/logs/cifar10lt_igd_lossfixmulti_eval_tau1_eval500 \
+    --finetuned_logdir /depot/gupta869/data/pranoy/logs/cifar10lt_igd_lossfixmulti_eval_tau1_eval500 \
+    --ckpt_step 50000 \
+    --total_steps 80001 \
+    --conditional \
+    --data_type cifar10lt \
+    --imb_factor 0.01 \
+    --img_size 32 \
+    --batch_size 48 \
+    --save_step 10000 \
+    --sample_step 5000 \
+    --cb --tau 1.0 --igd --eta 2e-4 --lr 2e-4
+------------------
+
+CUDA_VISIBLE_DEVICES=1 python main_igd.py \
+    --flagfile /scratch/gilbreth/das211/training_0/logs/cifar10lt_igd_lossfixmulti_eval_tau1_eval500/flagfile.txt \
+    --logdir /scratch/gilbreth/das211/training_0/logs/cifar10lt_igd_lossfixmulti_eval_tau1_eval500 \
+    --fid_cache ./stats/cifar10.train.npz \
+    --ckpt_step 60000 \
+    --num_images 15000 --batch_size 64 \
+    --notrain \
+    --eval \
+    --sample_method cfg  --omega 1.6 --prd
+
+
+------------------------------------------------------------
+
+tau: 0.1 lr: 1e-5
+Model(EMA): IS:8.32724(0.15030), FID/CIFAR100:22.24543 
+PRD PRECISION FOR 100 CLASSES:0.56671, RECALL:0.66462
+
+
+
+
+
+
+Model(EMA): IS:1.20494(0.01146), FID/CIFAR100:442.35138 
+
+/scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e5
+
+-----Training-----
+CUDA_VISIBLE_DEVICES=0 python main_igd.py --train          --flagfile ./config/cifar10.txt --parallel         --logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e5 --finetuned_logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e5 --ckpt_step 50000 --total_steps 110001         --conditional         --data_type cifar10lt --imb_factor 0.01 --img_size 32         --batch_size 48 --save_step 10000 --sample_step 5000         --cb --tau 0.1 --igd --eta 1e-5 --lr 1e-5
+------------------
+
+CUDA_VISIBLE_DEVICES=0 python main_igd.py \
+    --flagfile /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e5/flagfile.txt \
+    --logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e5 \
+    --fid_cache ./stats/cifar10.train.npz \
+    --ckpt_step 60000 \
+    --num_images 15000 --batch_size 64 \
+    --notrain \
+    --eval \
+    --sample_method cfg  --omega 1.6 --prd
+
+
+------------------------------------------------------------
+
+tau: 0.1 lr: 1e-4
+Model(EMA): IS:8.69986(0.17412), FID/CIFAR100:17.63235 
+PRD PRECISION FOR 100 CLASSES:0.55860, RECALL:0.66958
+
+
+
+
+
+Model(EMA): IS:1.21757(0.01267), FID/CIFAR100:409.49573 
+
+/scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e4
+
+-----Training-----
+CUDA_VISIBLE_DEVICES=0 python main_igd.py --train \
+    --flagfile ./config/cifar10.txt \
+    --parallel \
+    --logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e4 \
+    --finetuned_logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e4 \
+    --ckpt_step 50000 \
+    --total_steps 110001 \
+    --conditional \
+    --data_type cifar10lt \
+    --imb_factor 0.01 \
+    --img_size 32 \
+    --batch_size 48 \
+    --save_step 10000 \
+    --sample_step 5000 \
+    --cb --tau 0.1 --igd --eta 1e-4 --lr 1e-4
+------------------
+
+CUDA_VISIBLE_DEVICES=0 python main_igd.py \
+    --flagfile /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e4/flagfile.txt \
+    --logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e4 \
+    --fid_cache ./stats/cifar10.train.npz \
+    --ckpt_step 90000 \
+    --num_images 15000 --batch_size 64 \
+    --notrain \
+    --eval \
+    --sample_method cfg  --omega 1.6 --prd
+
+
+------------------------------------------------------------
+
+tau: 1.0 lr: 1e-4
+Model(EMA): IS:8.86302(0.17077), FID/CIFAR100:17.67450 
+PRD PRECISION FOR 100 CLASSES:0.60632, RECALL:0.68182 
+
+
+
+Model(EMA): IS:1.21679(0.01451), FID/CIFAR100:423.42078 
+
+/scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e4
+
+-----Training-----
+CUDA_VISIBLE_DEVICES=0 python main_igd.py --train          --flagfile ./config/cifar10.txt --parallel         --logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e4 --finetuned_logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e4 --ckpt_step 50000 --total_steps 110001         --conditional         --data_type cifar10lt --imb_factor 0.01 --img_size 32         --batch_size 48 --save_step 10000 --sample_step 5000         --cb --tau 1.0 --igd --eta 1e-4 --lr 1e-4
+------------------
+
+CUDA_VISIBLE_DEVICES=0 python main_igd.py \
+    --flagfile /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e4/flagfile.txt \
+    --logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e4 \
+    --fid_cache ./stats/cifar10.train.npz \
+    --ckpt_step 60000 \
+    --num_images 15000 --batch_size 64 \
+    --notrain \
+    --eval \
+    --sample_method cfg  --omega 1.6 --prd
+
+
+------------------------------------------------------------
+
+tau: 1.0 lr: 1e-5
+Model(EMA): IS:8.52867(0.20606), FID/CIFAR100:20.76355 
+PRD PRECISION FOR 100 CLASSES:0.59802, RECALL:0.68294 
+
+
+
+
+Model(EMA): IS:1.19624(0.01168), FID/CIFAR100:446.42461
+
+
+/scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e5
+
+-----Training-----
+CUDA_VISIBLE_DEVICES=0 python main_igd.py --train          --flagfile ./config/cifar10.txt --parallel         --logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e5 --finetuned_logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e5 --ckpt_step 50000 --total_steps 110001         --conditional         --data_type cifar10lt --imb_factor 0.01 --img_size 32         --batch_size 48 --save_step 10000 --sample_step 5000         --cb --tau 1.0 --igd --eta 1e-5 --lr 1e-5
+------------------
+
+CUDA_VISIBLE_DEVICES=0 python main_igd.py \
+    --flagfile /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e5/flagfile.txt \
+    --logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e5 \
+    --fid_cache ./stats/cifar10.train.npz \
+    --ckpt_step 60000 \
+    --num_images 15000 --batch_size 64 \
+    --notrain \
+    --eval \
+    --sample_method cfg  --omega 1.6 --prd
+
+
+
+------------------------------------------------------------
+
+cbdm lr: 2e-4
+Model(EMA): IS:7.92008(0.18088), FID/CIFAR100:19.10261 
+PRD PRECISION FOR 100 CLASSES:0.58902, RECALL:0.79543
+
+
+
+
+Model(EMA): IS:1.22079(0.01076), FID/CIFAR100:419.81556 
+
+/scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_cbdm
+
+CUDA_VISIBLE_DEVICES=0 python main.py \
+    --flagfile /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_cbdm/flagfile.txt \
+    --logdir /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_cbdm \
+    --data_type cifar10lt \
+    --fid_cache ./stats/cifar10.train.npz \
+    --ckpt_step 90000 \
+    --num_images 15000 --batch_size 64 \
+    --notrain \
+    --eval \
+    --sample_method cfg  --omega 1.6 --prd
+
+
+
+
+./move_files.sh -n -s "50000 60000 100000" /depot/gupta869/data/pranoy \
+  /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_cbdm
+
+
+./move_files_new.sh -s "70000 80000" /depot/gupta869/data/pranoy \
+  /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_cbdm \
+  /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd_lossfixmulti_eval_tau0_1_eval500 \
+  /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd_lossfixmulti_tau0_eval_eval500 \
+  /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd_lossfixmulti_eval_tau1_eval500 \
+  /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e5 \
+  /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau0_1_final_lr1e4 \
+  /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e4 \
+  /scratch/gilbreth/pal42/pranoy_logs/logs/cifar10lt_igd__tau1_final_lr1e5
+
+
+/depot/gupta869/data/pranoy/logs/

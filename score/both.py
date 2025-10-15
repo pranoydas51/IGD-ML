@@ -125,14 +125,14 @@ def get_inception_and_fid_score(images, labels, fid_cache, num_images=None,
     # prd
     print('calculate prd (F_beta)')
     prd_score = (0, 0)
-    if FLAGS.prd and len(fid_acts)==50000:
+    if FLAGS.prd: #and len(fid_acts)==50000:
         # import pdb; pdb.set_trace()
       
         print(FLAGS.data_type)
         if FLAGS.data_type == "cifar100" or FLAGS.data_type == "cifar100lt":
-           feats = np.load('/mnt/workspace/dlly/ucm3/stats/cifar100_feats.npy')
+           feats = np.load('/depot/gupta869/data/pranoy/CBDM-pytorch/stats/cifar10_feats.npy')
         elif FLAGS.data_type == "cifar10" or FLAGS.data_type == "cifar10lt":
-           feats = np.load('/mnt/workspace/dlly/ucm3/stats/cifar10_feats.npy')
+           feats = np.load('/depot/gupta869/data/pranoy/CBDM-pytorch/stats/cifar100_feats.npy')
         feats = torch.Tensor(feats)
         if isinstance(fid_acts, np.ndarray):
             fid_acts = torch.Tensor(fid_acts)
@@ -143,8 +143,8 @@ def get_inception_and_fid_score(images, labels, fid_cache, num_images=None,
             num_clusters=num_clusters,
             num_angles=1001,
             num_runs=10,
-            enforce_balance=True)
-        prd_data = compute_prd_from_embedding(eval_data=fid_acts,ref_data=feats,num_clusters=num_clusters,num_angles=1001,num_runs=10,enforce_balance=True)
+            enforce_balance=False)
+        prd_data = compute_prd_from_embedding(eval_data=fid_acts,ref_data=feats,num_clusters=num_clusters,num_angles=1001,num_runs=10,enforce_balance=False)
         prd_score = prd_to_max_f_beta_pair(prd_data[0], prd_data[1], beta=8) # precision/recall
         # print('prd_score', prd_score)
 
@@ -154,12 +154,12 @@ def get_inception_and_fid_score(images, labels, fid_cache, num_images=None,
     if FLAGS.improved_prd and len(fid_acts)==50000:
         print(FLAGS.data_type)
         if FLAGS.data_type == "cifar100" or FLAGS.data_type == "cifar100lt":
-           feats = np.load('/mnt/workspace/dlly/ucm3/stats/cifar100_feats.npy')
+           feats = np.load('/depot/gupta869/data/pranoy/CBDM-pytorch/stats/cifar10_feats.npy')
         elif FLAGS.data_type == "cifar10" or FLAGS.data_type == "cifar10lt":
-           feats = np.load('/mnt/workspace/dlly/ucm3/stats/cifar10_feats.npy')
+           feats = np.load('/depot/gupta869/data/pranoy/CBDM-pytorch/stats/cifar100_feats.npy')
         if isinstance(fid_acts, torch.Tensor):
             fid_acts = fid_acts.numpy()
-        ipr = IPR(32, k=5, num_samples=50000, model='InceptionV3')
+        ipr = IPR(32, k=5, num_samples=500, model='InceptionV3')
         ipr.compute_manifold_ref(None, feats=feats)  # args.path_real can be either directory or pre-computed manifold file
         metric = ipr.precision_and_recall(images, subject_feats=fid_acts)
         im_prd = (metric.precision, metric.recall)
